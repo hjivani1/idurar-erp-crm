@@ -1,0 +1,55 @@
+version: "3.8"
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "8888:8888"
+    environment:
+      - NODE_ENV=development
+      - DATABASE=mongodb://mongodb:27017/local-idurar-erp-crp
+      - PORT=8888
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - JWT_SECRET=secret_key_1234
+
+    command: sh -c "npm run setup && npm run dev"
+
+    networks:
+      - mern-net
+
+    depends_on:
+      - mongodb
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://backend:8888/api
+      - NODE_OPTIONS=--openssl-legacy-provider
+
+    depends_on:
+      - backend
+
+  mongodb:
+    image: mongo
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - mern-net
+
+volumes:
+  mongodb_data:
+
+networks:
+  mern-net:
